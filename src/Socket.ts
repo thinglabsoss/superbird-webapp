@@ -3,6 +3,9 @@ import RequestLogger from './helpers/RequestLogger';
 
 const BASE_URL = 'ws://localhost:8890';
 
+const RECONNECT_INITIAL_MS = 250;
+const RECONNECT_MAX_MS = 30_000;
+
 type SocketEventListener = (msg: any) => void;
 
 export function create_socket(): WebSocket {
@@ -19,6 +22,9 @@ export class Socket {
   requestLogger: RequestLogger;
   shouldLogRequests = false;
 
+  reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  reconnectDelayMs = RECONNECT_INITIAL_MS;
+
   constructor(requestLogger: RequestLogger, socket_connector: () => WebSocket = create_socket) {
     this.socket_connector = socket_connector;
     this.requestLogger = requestLogger;
@@ -31,22 +37,27 @@ export class Socket {
     this.connect(this.socket_connector());
   }
 
+  scheduleReconnect(): void {
+    if (this.reconnectTimer !== null) return;
+    const delay = this.reconnectDelayMs;
+    this.reconnectDelayMs = Math.min(this.reconnectDelayMs * 2, RECONNECT_MAX_MS);
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.reconnect();
+    }, delay);
+  }
+
   connect(webSocket: WebSocket): void {
     this.webSocket = webSocket;
     // browser socket, WebSocket IPC transport
     webSocket.onopen = (): void => {
+      this.reconnectDelayMs = RECONNECT_INITIAL_MS;
       this.registerEventHandler();
       this.flushQueue(this.middlewareQueue);
     };
 
-    webSocket.onclose = () => {
-      setTimeout(this.reconnect.bind(this), 1000);
-      return;
-    };
-    webSocket.onerror = () => {
-      setTimeout(this.reconnect.bind(this), 1000);
-      return;
-    };
+    webSocket.onclose = () => this.scheduleReconnect();
+    webSocket.onerror = () => this.scheduleReconnect();
   }
 
   is_ready(): boolean {
