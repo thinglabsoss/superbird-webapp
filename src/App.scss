@@ -4,6 +4,12 @@
   --font-family: spotify-circular;
 }
 
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
 body {
   user-select: none;
   box-sizing: border-box;

@@ -12,5 +12,12 @@ $artwork-container-height: 248px;
 .artwork {
   width: $artwork-container-width;
   height: $artwork-container-height;
-  box-shadow: 0 16px 32px rgb(0 0 0 / 20%);
+  // Tight + layered. The original `0 16px 32px rgb(0 0 0 / 20%)` blur
+  // banded visibly on chromium 147 / Panfrost (limited gradient
+  // precision in low-alpha large-radius rasterization) and bled 32px
+  // down into the track-title row. Shorter radii compose into a soft
+  // shadow that the GPU rasterizes cleanly.
+  box-shadow:
+    0 2px 4px rgb(0 0 0 / 40%),
+    0 6px 12px rgb(0 0 0 / 25%);
 }
