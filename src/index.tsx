@@ -1,4 +1,4 @@
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 // import configureMobx from 'mobxConfig';
 import App from 'App';
 import 'Fonts.css';
@@ -18,7 +18,7 @@ import RequestLogger from 'helpers/RequestLogger';
 import { no_wamp_session_destroyed } from 'eventhandler/ErrorHandlerFilters';
 import { migrateAllFromLocalStorage } from './system/StorageMigration';
 
-const rootElement = document.getElementById('root');
+const rootElement = document.getElementById('root')!;
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -53,9 +53,8 @@ hardwareEventHandler.handleEvents(hardwareEvents, rootStore);
 const mockHardwareEvents = new MockHardwareEvents(hardwareEvents);
 mockHardwareEvents.startListening();
 
-ReactDOM.render(
+createRoot(rootElement).render(
   <StoreProvider store={rootStore}>
     <App />
   </StoreProvider>,
-  rootElement,
 );

@@ -7,6 +7,7 @@ import { CSSTransition } from 'react-transition-group';
 import { useStore } from 'context/store';
 import { PresetOrPlaceholderOrUnavailable } from 'component/Presets/PresetsUiState';
 import PresetUnavailable from 'component/Presets/PresetCard/PresetUnavailable';
+import { useRef } from 'react';
 
 const transitionStyles = {
   appear: styles.appear,
@@ -22,6 +23,7 @@ type Props = {
 const PresetCard = ({ preset }: Props) => {
   const uiState = useStore().presetsController.presetsUiState;
   const isFocused = uiState.selectedPresetNumber === preset.slot_index;
+  const nodeRef = useRef<HTMLDivElement>(null);
   return (
     <CSSTransition
       data-testid={`preset-card-${preset.slot_index}`}
@@ -30,8 +32,10 @@ const PresetCard = ({ preset }: Props) => {
       in={uiState.currentIsPresets}
       appear
       key={`preset-card-${preset.slot_index}`}
+      nodeRef={nodeRef}
     >
       <div
+        ref={nodeRef}
         data-testid={`preset-card-${preset.slot_index}`}
         className={classNames(styles.presetCard, styles[`presetCard${preset.slot_index}`], {
           [styles.active]: isFocused,

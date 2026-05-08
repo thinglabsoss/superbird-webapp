@@ -10,7 +10,7 @@ import { runInAction } from 'mobx';
 const BANNER_ICON_SIZE: IconSize = 32;
 export const NETWORK_RESTORED_CONFIRMATION_DURATION_MS = 5_000;
 
-function NoNetworkBanner(): JSX.Element {
+function NoNetworkBanner() {
   return (
     <Banner
       show
@@ -20,7 +20,7 @@ function NoNetworkBanner(): JSX.Element {
   );
 }
 
-export function NetworkRestoredBanner(): JSX.Element {
+export function NetworkRestoredBanner() {
   return (
     <Banner
       show
@@ -31,7 +31,7 @@ export function NetworkRestoredBanner(): JSX.Element {
   );
 }
 
-function NoNetworkBannerContainer(): JSX.Element {
+function NoNetworkBannerContainer() {
   const { sessionStateStore } = useStore();
   const [showNoNetworkBanner, setShowNoNetworkBanner] = useState<boolean>(false);
   const [showNetworkRestoredBanner, setShowNetworkRestoredBanner] = useState<boolean>(false);

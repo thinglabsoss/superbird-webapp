@@ -8,7 +8,7 @@ import Volume from 'component/Npv/Volume/Volume';
 import WindAlertBanner from 'component/Npv/WindAlertBanner/WindAlertBanner';
 import { useStore } from 'context/store';
 import { observer } from 'mobx-react-lite';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { CSSTransition } from 'react-transition-group';
 import { transitionDurationMs } from 'style/Variables';
 import styles from './Npv.module.scss';
@@ -28,6 +28,8 @@ const getBackgroundColorFromChannels = (rgbChannels: number[]): string => {
 
 const Npv = () => {
   const { npvStore, ubiLogger, queueStore, playerStore } = useStore();
+  const controlsRef = useRef<HTMLDivElement>(null);
+  const volumeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     ubiLogger.npvUbiLogger.logImpression();
@@ -50,16 +52,22 @@ const Npv = () => {
             timeout={transitionDurationMs}
             classNames={transitionStyles}
             unmountOnExit
+            nodeRef={controlsRef}
           >
-            <Controls />
+            <div ref={controlsRef}>
+              <Controls />
+            </div>
           </CSSTransition>
           <CSSTransition
             in={npvStore.volumeUiState.shouldShowVolume}
             timeout={transitionDurationMs}
             classNames={transitionStyles}
             unmountOnExit
+            nodeRef={volumeRef}
           >
-            <Volume />
+            <div ref={volumeRef}>
+              <Volume />
+            </div>
           </CSSTransition>
         </div>
         <WindAlertBanner />

@@ -5,8 +5,8 @@ import { useStore } from 'context/store';
 import { firstLetterUpperCase } from 'helpers/TextUtil';
 import { action, runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
-import { useEffect, useState } from 'react';
-import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { CSSTransition, type CSSTransitionProps, TransitionGroup } from 'react-transition-group';
 import { delayedAction, LearnVoiceStepId } from 'store/OnboardingStore';
 import { LearnVoiceData } from './LearnVoice';
 import styles from './LearnVoiceStep.module.scss';
@@ -111,37 +111,26 @@ const LearnVoiceStep = ({ learnVoiceData: { header, title, voiceEnabled, tts1, t
   return (
     <div className={styles.learnVoiceStep}>
       <TransitionGroup className={styles.headerAndTitle}>
-        <CSSTransition
-          timeout={2000}
-          key={transcript || voiceStore.error || title}
-          classNames={{ ...animationStyles }}
-          appear
-        >
-          <div
-            className={classNames({
-              [styles.voiceActive]: voiceActive,
-            })}
-          >
-            {showHeader && (
-              <Type name="canonBold" className={styles.header}>
-                {header}
-              </Type>
-            )}
-            {show &&
-              (voiceStore.error ? (
-                <div className={styles.transition}>
-                  <Type name="brioBold" className={styles.errorContent}>
-                    That didn’t work, you might be offline.
-                  </Type>
-                  <Type name="brioBold" className={styles.errorContent}>
-                    That’s OK, let’s move on.
-                  </Type>
-                </div>
-              ) : (
-                <Type name="forteBold">{transcript ? firstLetterUpperCase(transcript) : title}</Type>
-              ))}
-          </div>
-        </CSSTransition>
+        <LearnVoiceStepTransition key={transcript || voiceStore.error || title} voiceActive={voiceActive}>
+          {showHeader && (
+            <Type name="canonBold" className={styles.header}>
+              {header}
+            </Type>
+          )}
+          {show &&
+            (voiceStore.error ? (
+              <div className={styles.transition}>
+                <Type name="brioBold" className={styles.errorContent}>
+                  That didn’t work, you might be offline.
+                </Type>
+                <Type name="brioBold" className={styles.errorContent}>
+                  That’s OK, let’s move on.
+                </Type>
+              </div>
+            ) : (
+              <Type name="forteBold">{transcript ? firstLetterUpperCase(transcript) : title}</Type>
+            ))}
+        </LearnVoiceStepTransition>
       </TransitionGroup>
       <div className={styles.skipOrJellyfish}>
         {!voiceActive && <SkipButton />}
@@ -152,6 +141,22 @@ const LearnVoiceStep = ({ learnVoiceData: { header, title, voiceEnabled, tts1, t
         )}
       </div>
     </div>
+  );
+};
+
+type LearnVoiceStepTransitionProps = Partial<CSSTransitionProps> & {
+  voiceActive: boolean;
+  children: ReactNode;
+};
+
+const LearnVoiceStepTransition = ({ voiceActive, children, ...transitionProps }: LearnVoiceStepTransitionProps) => {
+  const nodeRef = useRef<HTMLDivElement>(null);
+  return (
+    <CSSTransition timeout={2000} classNames={{ ...animationStyles }} appear {...transitionProps} nodeRef={nodeRef}>
+      <div ref={nodeRef} className={classNames({ [styles.voiceActive]: voiceActive })}>
+        {children}
+      </div>
+    </CSSTransition>
   );
 };
 

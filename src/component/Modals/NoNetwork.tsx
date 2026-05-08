@@ -7,7 +7,7 @@ type Props = {
   onAcknowledgeClick: () => void;
 };
 
-export const NoNetwork = ({ onAcknowledgeClick }: Props): JSX.Element => (
+export const NoNetwork = ({ onAcknowledgeClick }: Props) => (
   <div className={styles.noNetworkWrapper} data-testid="no_network-modal-type">
     <div className={styles.noNetwork}>
       <div className={styles.noNetworkContent}>
@@ -24,7 +24,7 @@ export const NoNetwork = ({ onAcknowledgeClick }: Props): JSX.Element => (
   </div>
 );
 
-const NoNetworkContainer = (): JSX.Element => {
+const NoNetworkContainer = () => {
   const { overlayController } = useStore();
 
   function onAcknowledgeClick(): void {

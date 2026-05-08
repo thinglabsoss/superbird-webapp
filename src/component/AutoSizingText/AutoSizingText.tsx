@@ -16,7 +16,7 @@ const AutoSizingText = ({
   maxHeight,
   textSizesDescending,
   dataTestId,
-}: Props): JSX.Element | null => {
+}: Props) => {
   const [showText, setShowText] = useState(true);
   const [textSizeIndex, setTextSizeIndex] = useState(0);
   // Keeping a copy of the text to be able to compare text div size on rerender.

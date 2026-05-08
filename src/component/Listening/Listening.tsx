@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import styles from './Listening.module.scss';
 import { observer } from 'mobx-react-lite';
 import VoiceConfirmation from 'component/VoiceConfirmation/VoiceConfirmation';
@@ -63,7 +63,7 @@ export function Listening({
   isError,
   listening,
 }: ListeningProps) {
-  let content: JSX.Element | null = null;
+  let content: ReactNode = null;
   let showJellyfish = true;
 
   if (errorUiTitle) {

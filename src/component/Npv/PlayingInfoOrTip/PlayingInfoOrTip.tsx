@@ -4,6 +4,7 @@ import { useStore } from 'context/store';
 import { observer } from 'mobx-react-lite';
 import { CSSTransition, SwitchTransition } from 'react-transition-group';
 import styles from './PlayingInfoOrTip.module.scss';
+import { useRef } from 'react';
 
 const playingInfoAnim = {
   enter: styles.playingInfoEnter,
@@ -21,6 +22,7 @@ const tipAnim = {
 
 const PlayingInfoOrTip = () => {
   const uiState = useStore().npvStore.tipsUiState;
+  const nodeRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className={styles.playingInfoOrTip}>
@@ -29,8 +31,10 @@ const PlayingInfoOrTip = () => {
           key={uiState.tipToShow ? 1 : 0}
           timeout={300}
           classNames={uiState.tipToShow ? tipAnim : playingInfoAnim}
-          children={uiState.tipToShow ? <Tips /> : <PlayingInfo />}
-        />
+          nodeRef={nodeRef}
+        >
+          <div ref={nodeRef}>{uiState.tipToShow ? <Tips /> : <PlayingInfo />}</div>
+        </CSSTransition>
       </SwitchTransition>
     </div>
   );

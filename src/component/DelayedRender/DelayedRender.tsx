@@ -1,5 +1,4 @@
-/* eslint @typescript-eslint/no-explicit-any: 0 */
-import { Component } from 'react';
+import { Component, type ReactNode } from 'react';
 
 type State = {
   showing: boolean;
@@ -9,7 +8,7 @@ type Props = {
   showDelay?: number;
   hideDelay?: number;
   showing: boolean;
-  children: Record<string, any>;
+  children: ReactNode;
 };
 
 class DelayedRender extends Component<Props, State> {

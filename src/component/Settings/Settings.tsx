@@ -1,4 +1,4 @@
-import { CSSProperties, useEffect } from 'react';
+import { CSSProperties, useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import {
   AboutMenuItemId,
@@ -8,7 +8,7 @@ import {
   RestartMenuItemId,
   View,
 } from 'store/SettingsStore';
-import { Transition, TransitionGroup } from 'react-transition-group';
+import { Transition, type TransitionProps, TransitionGroup } from 'react-transition-group';
 import styles from './Settings.module.scss';
 import { ENTERED, ENTERING, EXITED, EXITING } from 'react-transition-group/Transition';
 import Submenu from './Submenu/Submenu';
@@ -124,25 +124,14 @@ const Settings = () => {
             index !== viewStack.length - 1 && viewStack[index + 1]?.animationType === AnimationType.FADE_IN;
 
           return (
-            <Transition key={view.id} timeout={transitionDurationMs} onEnter={(node: HTMLElement) => reflow(node)}>
-              {action(transitionState => (
-                <Transition in={isCurrentView} timeout={transitionDurationMs} unmountOnExit={!nextIsFade}>
-                  <div
-                    style={
-                      view.animationType === AnimationType.FADE_IN
-                        ? STYLES_FADE_IN[transitionState]
-                        : STYLES_BOTTOM_UP[transitionState]
-                    }
-                    className={classNames(styles.settingsLayer, {
-                      [styles.transparent]: view.animationType === AnimationType.FADE_IN,
-                    })}
-                    data-testid="settings"
-                  >
-                    {getComponent(view)}
-                  </div>
-                </Transition>
-              ))}
-            </Transition>
+            <SettingsLayer
+              key={view.id}
+              view={view}
+              isCurrentView={isCurrentView}
+              nextIsFade={nextIsFade}
+              reflow={reflow}
+              getComponent={getComponent}
+            />
           );
         })}
       </TransitionGroup>
@@ -150,5 +139,51 @@ const Settings = () => {
     </Overlay>
   );
 };
+
+type SettingsLayerProps = Partial<TransitionProps> & {
+  view: View;
+  isCurrentView: boolean;
+  nextIsFade: boolean;
+  reflow: (node: HTMLElement) => void;
+  getComponent: (view: View) => React.ReactNode;
+};
+
+// Each layer owns its own nodeRef so the TransitionGroup-keyed children can
+// hand a stable per-instance ref to react-transition-group's findDOMNode-
+// less path. The ...transitionProps spread catches `in` + lifecycle props
+// TransitionGroup injects on each immediate child; without forwarding them
+// the outer Transition never enters and the layer stays unmounted.
+const SettingsLayer = observer(({ view, isCurrentView, nextIsFade, reflow, getComponent, ...transitionProps }: SettingsLayerProps) => {
+  const nodeRef = useRef<HTMLDivElement>(null);
+  return (
+    <Transition
+      timeout={transitionDurationMs}
+      onEnter={() => {
+        if (nodeRef.current) reflow(nodeRef.current);
+      }}
+      {...transitionProps}
+      nodeRef={nodeRef}
+    >
+      {action(transitionState => (
+        <Transition in={isCurrentView} timeout={transitionDurationMs} unmountOnExit={!nextIsFade} nodeRef={nodeRef}>
+          <div
+            ref={nodeRef}
+            style={
+              view.animationType === AnimationType.FADE_IN
+                ? STYLES_FADE_IN[transitionState]
+                : STYLES_BOTTOM_UP[transitionState]
+            }
+            className={classNames(styles.settingsLayer, {
+              [styles.transparent]: view.animationType === AnimationType.FADE_IN,
+            })}
+            data-testid="settings"
+          >
+            {getComponent(view)}
+          </div>
+        </Transition>
+      ))}
+    </Transition>
+  );
+});
 
 export default observer(Settings);

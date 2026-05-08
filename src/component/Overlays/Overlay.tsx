@@ -1,4 +1,4 @@
-import { CSSProperties, PropsWithChildren } from 'react';
+import { CSSProperties, PropsWithChildren, useRef } from 'react';
 import { genericEasing, recedeDefaultEasing, transitionDurationMs } from 'style/Variables';
 import styles from './Overlays.module.scss';
 import { Transition } from 'react-transition-group';
@@ -96,19 +96,23 @@ const reflow = (node: HTMLDivElement) => {
 
 const Overlay = ({ children, show, appear, classname, outDelay = 0 }: Props) => {
   const getAnimationStyle = state => appearanceClasses[appear](outDelay)[state];
+  const nodeRef = useRef<HTMLDivElement>(null);
   return (
     <Transition
       unmountOnExit
       mountOnEnter
-      onEnter={node => reflow(node)}
+      onEnter={() => {
+        if (nodeRef.current) reflow(nodeRef.current);
+      }}
       timeout={{
         enter: transitionDurationMs,
         exit: transitionDurationMs + outDelay,
       }}
       in={show}
+      nodeRef={nodeRef}
     >
       {state => (
-        <div className={classnames(styles.overlay, classname)} style={getAnimationStyle(state)}>
+        <div ref={nodeRef} className={classnames(styles.overlay, classname)} style={getAnimationStyle(state)}>
           {children}
         </div>
       )}

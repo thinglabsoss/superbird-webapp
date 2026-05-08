@@ -4,6 +4,7 @@ import { Button, ButtonType, IconPhoneDecline } from 'component/CarthingUICompon
 import { useStore } from 'context/store';
 import { CSSTransition } from 'react-transition-group';
 import { transitionDurationMs } from 'style/Variables';
+import { useRef } from 'react';
 
 const transitionStyles = {
   enter: styles.enter,
@@ -14,6 +15,7 @@ const transitionStyles = {
 
 const DeclineButton = () => {
   const uiState = useStore().phoneCallController.phoneCallUiState;
+  const nodeRef = useRef<HTMLButtonElement>(null);
 
   return (
     <CSSTransition
@@ -21,8 +23,10 @@ const DeclineButton = () => {
       timeout={transitionDurationMs}
       in={uiState.shouldShowAnswerOrDeclineButtons}
       unmountOnExit
+      nodeRef={nodeRef}
     >
       <Button
+        ref={nodeRef}
         type={ButtonType.BUTTON_PRIMARY}
         className={styles.decline}
         onClick={() => uiState.decline()}

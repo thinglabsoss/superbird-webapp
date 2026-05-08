@@ -16,6 +16,29 @@ const tipOnDemandTransitionClasses = {
   exitActive: styles.tipOnDemandExitActive,
 };
 
+const TipsOnDemandTransition = observer(({ uiState }: { uiState: TipsOnDemandUiState }) => {
+  const nodeRef = useRef<HTMLDivElement>(null);
+  return (
+    <SwitchTransition>
+      <CSSTransition
+        key={uiState.tip?.description}
+        timeout={300}
+        classNames={tipOnDemandTransitionClasses}
+        nodeRef={nodeRef}
+      >
+        <div ref={nodeRef}>
+          <Type name="canonBold" className={npvTipsStyles.title}>
+            {uiState.tip?.title}
+          </Type>
+          <Type name="brioBold" className={npvTipsStyles.description}>
+            {uiState.tip?.description}
+          </Type>
+        </div>
+      </CSSTransition>
+    </SwitchTransition>
+  );
+});
+
 const TipsOnDemandError = ({ uiState }: { uiState: TipsOnDemandUiState }) => {
   useEffect(() => {
     uiState.handleErrorViewMount();
@@ -61,18 +84,7 @@ const TipsOnDemand = () => {
       ) : (
         <div className={styles.tipsOnDemand}>
           <div>
-            <SwitchTransition>
-              <CSSTransition key={uiState.tip?.description} timeout={300} classNames={tipOnDemandTransitionClasses}>
-                <div>
-                  <Type name="canonBold" className={npvTipsStyles.title}>
-                    {uiState.tip?.title}
-                  </Type>
-                  <Type name="brioBold" className={npvTipsStyles.description}>
-                    {uiState.tip?.description}
-                  </Type>
-                </div>
-              </CSSTransition>
-            </SwitchTransition>
+            <TipsOnDemandTransition uiState={uiState} />
           </div>
           <div
             className={styles.buttonContainer}

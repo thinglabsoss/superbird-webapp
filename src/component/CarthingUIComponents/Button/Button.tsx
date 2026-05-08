@@ -1,4 +1,4 @@
-import { CSSProperties, useState } from 'react';
+import { CSSProperties, type Ref, useState } from 'react';
 import styles from './Button.module.scss';
 import pointerListenersMaker from 'helpers/PointerListeners';
 import classNames from 'classnames';
@@ -18,14 +18,16 @@ export type Props = {
   testId?: string;
   highlightOnDialPress?: boolean;
   style?: CSSProperties;
+  ref?: Ref<HTMLButtonElement>;
 };
 
-const Button = ({ children, onClick, type, className, testId, highlightOnDialPress = true, style }: Props) => {
+const Button = ({ children, onClick, type, className, testId, highlightOnDialPress = true, style, ref }: Props) => {
   const [pressed, setPressed] = useState(false);
   const { hardwareStore } = useStore();
 
   return (
     <button
+      ref={ref}
       className={classNames(className, {
         [styles.buttonPrimary]: type === ButtonType.BUTTON_PRIMARY,
         [styles.buttonSecondary]: type === ButtonType.BUTTON_SECONDARY,

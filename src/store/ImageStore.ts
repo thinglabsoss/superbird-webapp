@@ -21,7 +21,7 @@ class ImageStore {
   rootStore: RootStore;
 
   colorsMap: ObservableMap<string, Array<number>> = new ObservableMap<string, Array<number>>();
-  imagesMap: ObservableMap<ImageScale, Map<string, string>> = new ObservableMap<ImageScale, Map<string, string>>();
+  imagesMap: ObservableMap<ImageScale, ObservableMap<string, string>> = new ObservableMap<ImageScale, ObservableMap<string, string>>();
   pendingImages: Map<ImageScale, Map<string, string>> = new Map<ImageScale, Map<string, string>>([
     [ImageScale.SMALL, new Map<string, string>()],
     [ImageScale.BIG, new Map<string, string>()],
@@ -145,11 +145,11 @@ class ImageStore {
     toEvict.forEach((id: ImageKey) => this.imagesMap.get(id.scale)?.delete(id.imageId));
   }
 
-  get images(): Map<string, string> {
+  get images(): ObservableMap<string, string> {
     return get(this.imagesMap, ImageScale.BIG)!;
   }
 
-  get thumbnails(): Map<string, string> {
+  get thumbnails(): ObservableMap<string, string> {
     return get(this.imagesMap, ImageScale.SMALL)!;
   }
 

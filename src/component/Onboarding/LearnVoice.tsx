@@ -1,7 +1,7 @@
 import { useStore } from 'context/store';
 import { runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { CSSTransition, SwitchTransition } from 'react-transition-group';
 import { LearnVoiceStepId } from 'store/OnboardingStore';
 import LearnVoiceStep from './LearnVoiceStep';
@@ -109,10 +109,13 @@ const LearnVoice = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voiceStore.error]);
 
+  const nodeRef = useRef<HTMLDivElement>(null);
   return (
     <SwitchTransition>
-      <CSSTransition key={learnVoiceStep} timeout={1300} classNames={{ ...animations }}>
-        <LearnVoiceStep learnVoiceData={learnVoiceData[learnVoiceStep]} />
+      <CSSTransition key={learnVoiceStep} timeout={1300} classNames={{ ...animations }} nodeRef={nodeRef}>
+        <div ref={nodeRef}>
+          <LearnVoiceStep learnVoiceData={learnVoiceData[learnVoiceStep]} />
+        </div>
       </CSSTransition>
     </SwitchTransition>
   );

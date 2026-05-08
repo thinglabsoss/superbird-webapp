@@ -1,5 +1,5 @@
 import { useStore } from 'context/store';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { CSSTransition } from 'react-transition-group';
 import { LearnVoiceStepId } from 'store/OnboardingStore';
 import classNames from 'classnames';
@@ -17,6 +17,7 @@ const END_TOUR_VIA_SKIP_TTS = 'onboarding_learn_tactile_end_tour_via_skip.mp3';
 const SkipButton = () => {
   const { onboardingStore, voiceStore, ubiLogger } = useStore();
   const [pressedSkip, setPressedSkip] = useState(false);
+  const nodeRef = useRef<HTMLDivElement>(null);
 
   const logSkipClicked = () => {
     if (voiceStore.error) {
@@ -56,8 +57,9 @@ const SkipButton = () => {
   };
 
   return (
-    <CSSTransition appear in timeout={2500} classNames={{ ...animations }}>
+    <CSSTransition appear in timeout={2500} classNames={{ ...animations }} nodeRef={nodeRef}>
       <div
+        ref={nodeRef}
         className={classNames(styles.skipButtonWrapper, {
           [styles.pressed]: pressedSkip,
         })}

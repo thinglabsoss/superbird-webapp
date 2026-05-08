@@ -3,9 +3,9 @@ import { SwipeDirection } from 'component/Npv/SwipeHandler';
 import { useStore } from 'context/store';
 import { runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
-import { cloneElement, createRef, useEffect, useState } from 'react';
+import { cloneElement, createRef, type ReactElement, useEffect, useRef, useState } from 'react';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
-import { CSSTransitionClassNames } from 'react-transition-group/CSSTransition';
+import { CSSTransitionClassNames, CSSTransitionProps } from 'react-transition-group/CSSTransition';
 import { QueueItem } from 'store/QueueStore';
 import { transitionDurationMs } from 'style/Variables';
 import styles from './PlayingInfoTitles.module.scss';
@@ -60,7 +60,7 @@ const PlayingInfoTitle = ({ tracks, getAnimationClassNames }: Props) => {
       className={styles.texts}
       enter={uiState.swipeHandler.swipeDirection !== SwipeDirection.NONE}
       childFactory={child => {
-        return cloneElement(child, {
+        return cloneElement(child as ReactElement<CSSTransitionProps>, {
           timeout: transitionDurationMs,
           exit: uiState.swipeHandler.swipeDirection !== SwipeDirection.NONE,
           classNames: getAnimationClassNames(),
@@ -68,33 +68,75 @@ const PlayingInfoTitle = ({ tracks, getAnimationClassNames }: Props) => {
       }}
     >
       {tracks.map(track => (
-        <CSSTransition
+        <PlayingInfoTitleTransition
           key={track.uid}
-          timeout={transitionDurationMs}
-          className={styles.transitionContainer}
+          showTitle={showTitle}
+          titleSize={titleSize}
+          title={uiState.title}
+          subtitle={uiState.subtitle}
+          npvTitleRef={npvTitleRef}
           onEntering={() => uiState.swipeHandler.setSwipeDirection(SwipeDirection.NONE)}
-        >
-          <div className={styles.texts}>
-            {showTitle && (
-              <div
-                className={classNames(styles.songTitle, {
-                  [styles.songTitleBig]: titleSize === TitleSize.BIG,
-                  [styles.songTitleMiddle]: titleSize === TitleSize.MIDDLE,
-                  [styles.songTitleSmall]: titleSize === TitleSize.SMALL,
-                })}
-                data-testid="npv-track-title"
-                ref={npvTitleRef}
-              >
-                {uiState.title}
-              </div>
-            )}
-            <div className={styles.artistTitle} data-testid="npv-artist-title" onClick={uiState.handleArtistClick}>
-              {uiState.subtitle}
-            </div>
-          </div>
-        </CSSTransition>
+          onArtistClick={uiState.handleArtistClick}
+        />
       ))}
     </TransitionGroup>
+  );
+};
+
+type PlayingInfoTitleTransitionProps = Partial<CSSTransitionProps> & {
+  showTitle: boolean;
+  titleSize: TitleSize;
+  title: string;
+  subtitle: string;
+  npvTitleRef: React.RefObject<HTMLDivElement | null>;
+  onEntering: () => void;
+  onArtistClick: () => void;
+};
+
+// Per-track keyed transition with its own nodeRef. The npvTitleRef is the
+// auto-sizing measurement ref and stays separate from the transition's
+// nodeRef. The trailing ...transitionProps catches lifecycle props (in,
+// appear, etc.) that TransitionGroup injects onto each immediate child;
+// dropping them leaves the CSSTransition with no `in` and the title div
+// never enters.
+const PlayingInfoTitleTransition = ({
+  showTitle,
+  titleSize,
+  title,
+  subtitle,
+  npvTitleRef,
+  onEntering,
+  onArtistClick,
+  ...transitionProps
+}: PlayingInfoTitleTransitionProps) => {
+  const nodeRef = useRef<HTMLDivElement>(null);
+  return (
+    <CSSTransition
+      timeout={transitionDurationMs}
+      className={styles.transitionContainer}
+      onEntering={onEntering}
+      {...transitionProps}
+      nodeRef={nodeRef}
+    >
+      <div ref={nodeRef} className={styles.texts}>
+        {showTitle && (
+          <div
+            className={classNames(styles.songTitle, {
+              [styles.songTitleBig]: titleSize === TitleSize.BIG,
+              [styles.songTitleMiddle]: titleSize === TitleSize.MIDDLE,
+              [styles.songTitleSmall]: titleSize === TitleSize.SMALL,
+            })}
+            data-testid="npv-track-title"
+            ref={npvTitleRef}
+          >
+            {title}
+          </div>
+        )}
+        <div className={styles.artistTitle} data-testid="npv-artist-title" onClick={onArtistClick}>
+          {subtitle}
+        </div>
+      </div>
+    </CSSTransition>
   );
 };
 

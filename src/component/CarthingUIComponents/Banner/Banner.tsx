@@ -3,6 +3,7 @@ import Type from 'component/CarthingUIComponents/Type/Type';
 import { transitionDurationMs } from 'style/Variables';
 import { CSSTransition } from 'react-transition-group';
 import classNames from 'classnames';
+import { useRef } from 'react';
 
 const transitionStyles = {
   enter: styles.enter,
@@ -22,9 +23,18 @@ export type Props = {
 };
 
 const Banner = ({ show, icon, infoText, colorStyle = 'information', children }: Props) => {
+  const nodeRef = useRef<HTMLDivElement>(null);
   return (
-    <CSSTransition in={show} timeout={transitionDurationMs} classNames={transitionStyles} mountOnEnter unmountOnExit>
+    <CSSTransition
+      in={show}
+      timeout={transitionDurationMs}
+      classNames={transitionStyles}
+      mountOnEnter
+      unmountOnExit
+      nodeRef={nodeRef}
+    >
       <div
+        ref={nodeRef}
         className={classNames(styles.bannerContainer, {
           [styles.confirmation]: colorStyle === 'confirmation',
           [styles.information]: colorStyle === 'information',

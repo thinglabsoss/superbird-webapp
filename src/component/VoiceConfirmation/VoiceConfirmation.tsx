@@ -41,7 +41,7 @@ export type Props = {
 
 const iconSize: IconSize = 96 as IconSize;
 
-const VoiceConfirmation = ({ intent, action }: Props): JSX.Element => {
+const VoiceConfirmation = ({ intent, action }: Props) => {
   switch (intent) {
     case THUMBS_UP_INTENT:
     case FOLLOW_INTENT:

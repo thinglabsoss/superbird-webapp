@@ -5,6 +5,7 @@ import { CSSTransition } from 'react-transition-group';
 import CountUpTimer from 'component/CountUpTimer/CountUpTimer';
 import Type from 'component/CarthingUIComponents/Type/Type';
 import { transitionDurationMs } from 'style/Variables';
+import { useRef } from 'react';
 
 const transitionStyles = {
   enter: styles.enter,
@@ -15,6 +16,7 @@ const transitionStyles = {
 
 const PhoneCallTimer = () => {
   const uiState = useStore().phoneCallController.phoneCallUiState;
+  const nodeRef = useRef<HTMLDivElement>(null);
 
   return (
     <CSSTransition
@@ -22,8 +24,9 @@ const PhoneCallTimer = () => {
       timeout={transitionDurationMs}
       in={uiState.isOngoingCall}
       unmountOnExit
+      nodeRef={nodeRef}
     >
-      <Type name="celloBook" dataTestId="phone-timer" className={styles.timer}>
+      <Type name="celloBook" dataTestId="phone-timer" className={styles.timer} ref={nodeRef}>
         <div className={styles.timerDiv}>
           <CountUpTimer />
         </div>
