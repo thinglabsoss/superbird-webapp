@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { HOME_IDENTIFIER, VOICE_IDENTIFIER, YOUR_LIBRARY } from 'store/ShelfStore';
 import {
   IconLibrary32,
@@ -38,57 +38,91 @@ export const CATEGORY_ICONS = {
   },
 };
 
-const ShelfHeader = () => {
-  const [titleRefs, setTitleRefs] = useState<TitleRef[]>([]);
+type HeaderGeometry = {
+  translateLefts: number[];
+  yourLibTranslateLeft: number;
+  underlineTranslateX: number;
+  underlineScaleX: number;
+  hasUnderline: boolean;
+};
 
+const EMPTY_GEOMETRY: HeaderGeometry = {
+  translateLefts: [],
+  yourLibTranslateLeft: 0,
+  underlineTranslateX: 0,
+  underlineScaleX: 0,
+  hasUnderline: false,
+};
+
+const ShelfHeader = () => {
   const uiState = useStore().shelfStore.shelfController.headerUiState;
 
+  const mainCategories = uiState.mainCategories;
+  const yourLibraryCategories = uiState.yourLibraryCategories;
   const numberOfMainCategories = uiState.mainCategoriesCount;
+  const activeTitleIndex = uiState.activeTitleIndex;
+  const isInYourLibrary = uiState.isInYourLibrary;
+  const shouldShowShelfHeader = uiState.shouldShowShelfHeader;
+
+  const titleRefs = useRef<(TitleRef | null)[]>([]);
+  const [geometry, setGeometry] = useState<HeaderGeometry>(EMPTY_GEOMETRY);
+  const [fontTick, setFontTick] = useState(0);
+
   useEffect(() => {
-    setTitleRefs([]);
-  }, [uiState.mainCategoriesCount]);
-
-  const addTitleRef = (index: number, ref: TitleRef) => {
-    setTitleRefs(existingRefs => {
-      const titleRef = existingRefs[index];
-      if (!titleRef) {
-        const newRefs = [...existingRefs];
-        newRefs[index] = ref;
-        return newRefs;
+    let cancelled = false;
+    document.fonts?.ready.then(() => {
+      if (!cancelled) {
+        setFontTick(tick => tick + 1);
       }
-      return existingRefs;
     });
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const getTitleTranslateLeft = (index: number) => {
-    return (
-      titleRefs
+  useLayoutEffect(() => {
+    const refs = titleRefs.current;
+    const textWidthBefore = (index: number) =>
+      refs
         .slice(0, index)
-        .reduce((sum, titleRef) => (titleRef.titleTextRef ? sum + titleRef.titleTextRef.offsetWidth : sum), 0) +
-      8 * index // Move everything additional 8px left to reduce header margins when Your Library is expanded
-    );
-  };
+        .reduce((sum, ref) => (ref?.titleTextRef ? sum + ref.titleTextRef.offsetWidth : sum), 0) +
+      8 * index; // move everything an additional 8px left to reduce header margins when Your Library is expanded
 
-  if (!uiState.shouldShowShelfHeader) {
+    const translateLefts = Array.from({ length: numberOfMainCategories + 1 + yourLibraryCategories.length }, (_, index) =>
+      textWidthBefore(index),
+    );
+    const yourLibTranslateLeft = textWidthBefore(numberOfMainCategories + 1);
+
+    const container = refs[activeTitleIndex]?.titleContainerRef;
+    if (container) {
+      setGeometry({
+        translateLefts,
+        yourLibTranslateLeft,
+        underlineScaleX: container.offsetWidth,
+        underlineTranslateX: isInYourLibrary ? container.offsetLeft - yourLibTranslateLeft : container.offsetLeft,
+        hasUnderline: true,
+      });
+    } else {
+      setGeometry({
+        translateLefts,
+        yourLibTranslateLeft,
+        underlineScaleX: 0,
+        underlineTranslateX: 0,
+        hasUnderline: false,
+      });
+    }
+  }, [numberOfMainCategories, yourLibraryCategories.length, activeTitleIndex, isInYourLibrary, fontTick]);
+
+  if (!shouldShowShelfHeader) {
     return null;
   }
 
-  const yourLibTranslateLeft = getTitleTranslateLeft(numberOfMainCategories + 1);
-
-  const activeTitleRef = titleRefs[uiState.activeTitleIndex];
-  let underlineTranslateX: number;
-  if (!activeTitleRef || !activeTitleRef.titleContainerRef) {
-    underlineTranslateX = 0;
-  } else if (uiState.isInYourLibrary) {
-    underlineTranslateX = activeTitleRef.titleContainerRef.offsetLeft - yourLibTranslateLeft;
-  } else {
-    underlineTranslateX = activeTitleRef.titleContainerRef.offsetLeft;
-  }
+  const titleTranslateLeft = (index: number) => geometry.translateLefts[index] ?? 0;
 
   return (
     <>
       <div className={styles.shelfTitles}>
-        {uiState.mainCategories.map((category, index) => (
+        {mainCategories.map((category, index) => (
           <ShelfHeaderItem
             key={category.parsedId}
             id={category.parsedId}
@@ -98,9 +132,11 @@ const ShelfHeader = () => {
             marginRight={40}
             visible
             active={uiState.isSelectedItemCategory(category.parsedId)}
-            onlyIcon={uiState.isInYourLibrary}
-            translateLeft={getTitleTranslateLeft(index)}
-            ref={(ref: TitleRef) => addTitleRef(index, ref)}
+            onlyIcon={isInYourLibrary}
+            translateLeft={titleTranslateLeft(index)}
+            ref={(ref: TitleRef) => {
+              titleRefs.current[index] = ref;
+            }}
           />
         ))}
         <ShelfHeaderItem
@@ -110,32 +146,35 @@ const ShelfHeader = () => {
           iconMargin={CATEGORY_ICONS[YOUR_LIBRARY].iconMargin}
           marginRight={40}
           visible
-          active={uiState.isInYourLibrary}
-          onlyIcon={uiState.isInYourLibrary}
-          translateLeft={getTitleTranslateLeft(numberOfMainCategories)}
-          ref={(ref: TitleRef) => addTitleRef(numberOfMainCategories, ref)}
+          active={isInYourLibrary}
+          onlyIcon={isInYourLibrary}
+          translateLeft={titleTranslateLeft(numberOfMainCategories)}
+          ref={(ref: TitleRef) => {
+            titleRefs.current[numberOfMainCategories] = ref;
+          }}
         />
-        {uiState.yourLibraryCategories.map((category, index) => (
+        {yourLibraryCategories.map((category, index) => (
           <ShelfHeaderItem
             key={category.parsedId}
             id={category.parsedId}
             title={category.title}
             marginRight={24}
-            visible={uiState.isInYourLibrary}
+            visible={isInYourLibrary}
             active={uiState.isSelectedItemCategory(category.parsedId)}
-            translateLeft={yourLibTranslateLeft}
-            ref={(ref: TitleRef) => addTitleRef(numberOfMainCategories + index + 1, ref)}
+            translateLeft={geometry.yourLibTranslateLeft}
+            ref={(ref: TitleRef) => {
+              titleRefs.current[numberOfMainCategories + index + 1] = ref;
+            }}
           />
         ))}
       </div>
 
       <div className={styles.titleUnderlineContainer}>
-        {activeTitleRef && activeTitleRef.titleContainerRef && (
+        {geometry.hasUnderline && (
           <div
             className={styles.titleUnderline}
             style={{
-              transform: `translateX(${underlineTranslateX}px) 
-                          scaleX(${activeTitleRef.titleContainerRef.offsetWidth})`,
+              transform: `translateX(${geometry.underlineTranslateX}px) scaleX(${geometry.underlineScaleX})`,
             }}
           />
         )}
