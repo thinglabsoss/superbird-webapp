@@ -57,5 +57,9 @@
     "swiper": "^8.4.4",
     "tslib": "^2.4.1",
     "uuid": "^9.0.0"
-  }
+  },
+  "trustedDependencies": [
+    "@parcel/watcher",
+    "swiper"
+  ]
 }
