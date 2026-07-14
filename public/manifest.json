@@ -4,5 +4,12 @@
   "version": "0.1.0",
   "description": "ThingLabs fork of the stock Spotify Car Thing UI, modernized for chromium 147 + bridgething.",
   "permissions": [],
-  "config": []
+  "config": [],
+  "overlays": {
+    "notifications": false,
+    "call": false,
+    "pairing": false,
+    "connection": false,
+    "volume": false
+  }
 }
